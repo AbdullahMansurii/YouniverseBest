@@ -47,7 +47,7 @@ export function ProfileSetup() {
       if (error) throw error
 
       setSuccess('Profile created successfully!')
-      setTimeout(() => navigate('/browse'), 1500)
+      setTimeout(() => navigate('/dashboard'), 1500)
     } catch (error: any) {
       setError(error.message)
     } finally {

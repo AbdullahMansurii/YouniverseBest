@@ -9,6 +9,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sessionChecked, setSessionChecked] = useState(false)
 
   useEffect(() => {
     const getSession = async () => {
@@ -19,6 +20,7 @@ export function useAuth() {
         await fetchProfile(session.user.id)
       }
       
+      setSessionChecked(true)
       setLoading(false)
     }
 
@@ -34,6 +36,7 @@ export function useAuth() {
           setProfile(null)
         }
         
+        setSessionChecked(true)
         setLoading(false)
       }
     )
@@ -71,5 +74,17 @@ export function useAuth() {
     }
   }
 
-  return { user, profile, loading, signOut, refreshProfile }
+  const isProfileComplete = () => {
+    return profile?.profile_completed === true
+  }
+
+  return { 
+    user, 
+    profile, 
+    loading, 
+    sessionChecked,
+    signOut, 
+    refreshProfile, 
+    isProfileComplete 
+  }
 }

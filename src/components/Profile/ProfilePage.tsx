@@ -114,14 +114,14 @@ export function ProfilePage() {
               <div className="flex space-x-2">
                 <button
                   onClick={() => setShowPasswordChange(true)}
-                  className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                  className="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg font-medium hover:bg-opacity-30 transition-colors flex items-center space-x-2"
                 >
                   <Shield className="h-4 w-4" />
                   <span className="hidden sm:inline">Security</span>
                 </button>
                 <button
                   onClick={() => setEditing(!editing)}
-                  className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                  className="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg font-medium hover:bg-opacity-30 transition-colors flex items-center space-x-2"
                 >
                   {editing ? <X className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
                   <span>{editing ? 'Cancel' : 'Edit Profile'}</span>

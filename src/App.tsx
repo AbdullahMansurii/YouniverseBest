@@ -10,11 +10,12 @@ import { ProfilePage } from './components/Profile/ProfilePage'
 import { BrowsePage } from './components/Browse/BrowsePage'
 import { MessagesPage } from './components/Messages/MessagesPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { Dashboard } from './components/Dashboard/Dashboard'
 
 function App() {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, sessionChecked, isProfileComplete } = useAuth()
 
-  if (loading) {
+  if (loading || !sessionChecked) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -31,8 +32,8 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={
             user ? (
-              profile?.profile_completed ? (
-                <Navigate to="/browse" replace />
+              isProfileComplete() ? (
+                <Navigate to="/dashboard" replace />
               ) : (
                 <Navigate to="/profile/setup" replace />
               )
@@ -40,11 +41,18 @@ function App() {
               <Landing />
             )
           } />
-          <Route path="/login" element={user ? <Navigate to="/browse" replace /> : <Login />} />
+          <Route path="/login" element={user ? (
+            isProfileComplete() ? <Navigate to="/dashboard" replace /> : <Navigate to="/profile/setup" replace />
+          ) : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/profile/setup" replace /> : <Register />} />
           <Route path="/profile/setup" element={
             <ProtectedRoute>
               <ProfileSetup />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
             </ProtectedRoute>
           } />
           <Route path="/profile" element={

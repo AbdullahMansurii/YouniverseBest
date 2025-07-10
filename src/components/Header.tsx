@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { User, MessageCircle, Users, LogOut, Globe } from 'lucide-react'
+import { User, MessageCircle, Users, LogOut, Globe, Home } from 'lucide-react'
 
 export function Header() {
   const { user, signOut } = useAuth()
@@ -23,6 +23,13 @@ export function Header() {
 
           {user ? (
             <div className="flex items-center space-x-4">
+              <Link
+                to="/dashboard"
+                className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                <Home className="h-5 w-5" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Link>
               <Link
                 to="/browse"
                 className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors"

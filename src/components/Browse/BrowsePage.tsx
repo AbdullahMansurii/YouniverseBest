@@ -59,7 +59,7 @@ export function BrowsePage() {
   })
 
   const handleConnect = async (profileId: string) => {
-    if (!user?.id) {
+    if (!user?.id || !profile?.id) {
       alert('Please log in to send connection requests')
       return
     }
@@ -68,7 +68,7 @@ export function BrowsePage() {
       const { error } = await supabase
         .from('connections')
         .insert({
-          requester_id: user.id,
+          requester_id: profile.id,
           receiver_id: profileId
         })
 

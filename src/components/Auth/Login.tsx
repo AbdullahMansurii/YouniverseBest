@@ -10,10 +10,29 @@ export function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPasswordRecovery, setShowPasswordRecovery] = useState(false)
+  const [loginAttempts, setLoginAttempts] = useState(0)
+  const [isBlocked, setIsBlocked] = useState(false)
   const navigate = useNavigate()
+
+  // Simple client-side rate limiting for login attempts
+  useEffect(() => {
+    if (loginAttempts >= 5) {
+      setIsBlocked(true)
+      setTimeout(() => {
+        setIsBlocked(false)
+        setLoginAttempts(0)
+      }, 15 * 60 * 1000) // 15 minutes
+    }
+  }, [loginAttempts])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (isBlocked) {
+      setError('Too many failed login attempts. Please try again later.')
+      return
+    }
+    
     setLoading(true)
     setError('')
 
@@ -23,19 +42,25 @@ export function Login() {
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        setLoginAttempts(prev => prev + 1)
+        throw error
+      }
+
+      // Reset login attempts on successful login
+      setLoginAttempts(0)
 
       // Check if user has a profile, if not redirect to setup
-      const { data: profile } = await supabase
+      const { data: userProfile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, profile_completed')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
         .maybeSingle()
 
-      if (!profile || !profile.profile_completed) {
+      if (!userProfile || !userProfile.profile_completed) {
         navigate('/profile/setup')
       } else {
-        navigate('/browse')
+        navigate('/dashboard')
       }
     } catch (error: any) {
       setError(error.message)
@@ -75,7 +100,19 @@ export function Login() {
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
               <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-red-700 text-sm">{error}</p>
+              <div className="text-red-700 text-sm">
+                <p>{error}</p>
+                {loginAttempts > 0 && loginAttempts < 5 && (
+                  <p className="mt-1 text-xs">
+                    {5 - loginAttempts} attempts remaining before temporary lockout
+                  </p>
+                )}
+                {isBlocked && (
+                  <p className="mt-1 text-xs">
+                    Account temporarily locked. Try again in 15 minutes.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -118,10 +155,10 @@ export function Login() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || isBlocked}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Signing in...' : isBlocked ? 'Account Locked' : 'Sign In'}
             </button>
           </form>
 

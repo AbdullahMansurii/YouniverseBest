@@ -4,12 +4,13 @@ import { useAuth } from '../hooks/useAuth'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
+  requireCompleteProfile?: boolean
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth()
+export function ProtectedRoute({ children, requireCompleteProfile = false }: ProtectedRouteProps) {
+  const { user, loading, sessionChecked, isProfileComplete } = useAuth()
 
-  if (loading) {
+  if (loading || !sessionChecked) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -22,6 +23,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (requireCompleteProfile && !isProfileComplete()) {
+    return <Navigate to="/profile/setup" replace />
   }
 
   return <>{children}</>

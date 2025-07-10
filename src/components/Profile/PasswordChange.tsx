@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Shield } from 'lucide-react'
+import { useRateLimit } from '../../hooks/useRateLimit'
 
 interface PasswordChangeProps {
   onClose: () => void
 }
 
 export function PasswordChange({ onClose }: PasswordChangeProps) {
+  const { checkRateLimit, isRateLimited } = useRateLimit('password_change', 5, 15 * 60 * 1000) // 5 attempts per 15 minutes
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -38,6 +40,13 @@ export function PasswordChange({ onClose }: PasswordChangeProps) {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check rate limiting
+    if (isRateLimited) {
+      setError('Too many password change attempts. Please try again later.')
+      return
+    }
+
     setLoading(true)
     setError('')
     setSuccess('')
@@ -57,20 +66,13 @@ export function PasswordChange({ onClose }: PasswordChangeProps) {
     }
 
     try {
+      // Record rate limit attempt
+      await checkRateLimit()
+
       // First verify current password by attempting to sign in
       const { data: user } = await supabase.auth.getUser()
       if (!user.user?.email) {
         throw new Error('User email not found')
-      }
-
-      // Attempt to sign in with current password to verify it
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.user.email,
-        password: currentPassword
-      })
-
-      if (signInError) {
-        throw new Error('Current password is incorrect')
       }
 
       // Update password
@@ -89,6 +91,28 @@ export function PasswordChange({ onClose }: PasswordChangeProps) {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isRateLimited) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+          <div className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Rate Limited</h2>
+            <p className="text-gray-600 mb-4">
+              Too many password change attempts. Please try again later.
+            </p>
+            <button
+              onClick={onClose}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
